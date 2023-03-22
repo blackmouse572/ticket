@@ -4,12 +4,14 @@ import { Movie as MovieEntity } from "../entity/Movie";
 
 function MoviePage() {
   const movie = useLoaderData() as MovieEntity;
+  console.log(movie);
+
   return (
     <div className="gap-3 max-h-screen overflow-hidden">
       <div className="">
         {/* Full screen image */}
         <img
-          src={`https://image.tmdb.org/t/p/original/${movie.backdrop_path}`}
+          src={`${movie.posterPath}`}
           alt={movie.title}
           className="object-cover absolute top-0 left-0 h-screen w-screen max-w-none -z-10 blur-sm brightness-50"
         />

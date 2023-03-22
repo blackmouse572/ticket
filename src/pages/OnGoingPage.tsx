@@ -77,7 +77,7 @@ function OnGoingPage() {
             >
               <figure className="w-full overflow-clip">
                 <img
-                  src={`https://image.tmdb.org/t/p/w500${item.poster_path}`}
+                  src={item.posterPath}
                   className={"w-full group-hover:scale-110 transition-transform duration-300"}
                   key={item.id}
                   height={500}
@@ -195,7 +195,7 @@ function SeletedSeats({ movie }: { movie: Movie }) {
           <div className=" bg-base-100 shadow-xl w-full overflow-clip min-w-[5rem] min-h-fit max-w-[10rem] mx-auto">
             <figure className="w-full overflow-clip">
               <img
-                src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`}
+                src={movie.posterPath}
                 className={"w-full group-hover:scale-110 transition-transform duration-300"}
                 key={movie.id}
                 height={500}

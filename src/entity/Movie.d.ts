@@ -1,6 +1,6 @@
 import { ShowTime } from "./ShowTime";
 export interface Movie {
-  poster_path: string;
+  posterPath: string;
   adult: boolean;
   overview: string;
   release_date: string;
@@ -9,7 +9,7 @@ export interface Movie {
   original_title: string;
   original_language: string;
   title: string;
-  backdrop_path: string;
+  backdropPath: string;
   popularity: number;
   vote_count: number;
   video: boolean;

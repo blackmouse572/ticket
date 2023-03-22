@@ -269,7 +269,7 @@ function Checkout() {
       {/* Details */}
       <div className="bg-secondary-focus/80 text-white px-4 py-5 col-span-4 w-full">
         <article className="mx-auto text-center flex justify-center items-center flex-col">
-          <img src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`} alt={movie.title} className="w-36" />
+          <img src={`https://image.tmdb.org/t/p/w500${movie.posterPath}`} alt={movie.title} className="w-36" />
           <h2 className="text-lg font-bold">{movie.title}</h2>
           <div className="divider divider-horizontal h-[0.05rem] bg-base-content/40 space-y-3 my-3 w-full" />
           <div className="w-full space-y-3 font-semibold">

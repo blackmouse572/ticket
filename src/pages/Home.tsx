@@ -131,7 +131,7 @@ function Movies() {
             >
               <figure className="w-full overflow-clip">
                 <img
-                  src={`https://image.tmdb.org/t/p/w500${item.poster_path}`}
+                  src={item.posterPath}
                   className={"w-full group-hover:scale-110 transition-transform duration-300"}
                   key={item.id}
                   height={500}
