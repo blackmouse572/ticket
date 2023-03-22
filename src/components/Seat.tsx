@@ -10,10 +10,7 @@ export type SeatProps = {
 
 export default function Seat({ isTaken = false, seatData, isChosen, seatToggle }: SeatProps) {
   return (
-    <div
-      className="text-2xl tooltip"
-      data-tip={`${isTaken ? seatData.row.toString() + seatData.column.toString() : ""}`}
-    >
+    <div className="text-2xl tooltip" data-tip={`${isTaken ? seatData.rowName + seatData.seatNumber : ""}`}>
       {isTaken ? (
         <button
           onClick={() => {

@@ -8,7 +8,7 @@ export interface ShowTime extends IBase {
   movie?: Movie;
   roomNumberId?: number;
   room?: Room;
-  startTime?: Date;
-  endTime?: Date;
+  startTime?: string;
+  endTime?: string;
   seats?: Seat[];
 }

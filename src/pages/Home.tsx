@@ -4,7 +4,7 @@ import { MdNavigateNext, MdOutlineNavigateBefore } from "react-icons/md";
 import { Carousel } from "react-responsive-carousel";
 import "react-responsive-carousel/lib/styles/carousel.min.css";
 import { Link } from "react-router-dom";
-import { Movie, MovieResponse } from "../entity/Movie";
+import { Movie } from "../entity/Movie";
 
 function Home() {
   return (
@@ -53,12 +53,10 @@ const MovieTabs = [
 function Movies() {
   const [tab, setTab] = useState(MovieTabs[0].id);
   const sliderRef = useRef<HTMLDivElement>(null);
-  const { isLoading, isError, error, data } = useQuery<MovieResponse>(["movies", tab], async () => {
+  const { isLoading, isError, error, data } = useQuery<Movie[]>(["movies", tab], async () => {
     const fetchUrl = tab === "phim-dang-chieu" ? "now_playing" : "upcoming";
 
-    const res = await fetch(
-      `https://api.themoviedb.org/3/movie/${fetchUrl}?api_key=${import.meta.env.VITE_MOVIE_KEY}&language=vi-VN&page=1`
-    );
+    const res = await fetch(`https://localhost:7193/api/Movies`);
     const data = await res.json();
     return data;
   });
@@ -125,7 +123,7 @@ function Movies() {
           <MdOutlineNavigateBefore />
         </button>
         {data &&
-          data.results.map((item: Movie, index: number) => (
+          data.map((item: Movie, index: number) => (
             <Link
               to={`/movie/${item.id}`}
               className="card bg-base-100 group shadow-xl w-full overflow-clip min-w-[10rem] min-h-full"

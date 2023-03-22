@@ -1,45 +1,26 @@
 import * as Separator from "@radix-ui/react-separator";
-import { useRef, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useMemo, useRef, useState } from "react";
 import { FiArrowRight } from "react-icons/fi";
 import { MdNavigateNext, MdOutlineNavigateBefore } from "react-icons/md";
-import { useLoaderData, useNavigate, useSearchParams } from "react-router-dom";
+import { Navigate, useLoaderData, useNavigate, useSearchParams } from "react-router-dom";
 import DatePicker from "../components/DatePicker";
 import SeatMap from "../components/SeatMap";
 import ShowTimePicker from "../components/ShowTimePicker";
-import { Movie, MovieResponse } from "../entity/Movie";
-import { Seat, SeatMap as SeatMapEntity } from "../entity/Seat";
+import { Movie } from "../entity/Movie";
+import { Seat } from "../entity/Seat";
+import { ShowTime } from "../entity/ShowTime";
+import { useAuth } from "../hooks/useAuth";
 import { CheckoutFormProps } from "./Checkout";
 
-const seats = Array.from({ length: 5 }, (_, i) => {
-  return Array.from({ length: 5 }, (_, j) => {
-    const row = String.fromCharCode(65 + i);
-    const column = j + 1;
-    const id = row + column;
-    const isTaken = Math.random() > 0.5;
-    const seat: Seat = {
-      id: id.toString() as string,
-      row: row,
-      column: column,
-      reserved: isTaken,
-    };
-
-    return seat;
-  });
-});
-
-const datas: SeatMapEntity = {
-  rows: 5,
-  columns: 5,
-  seats: seats.flat(),
-  total: 25,
-};
-
 function OnGoingPage() {
-  const data = useLoaderData() as MovieResponse;
+  const data = useLoaderData() as Movie[];
+  const auth = useAuth();
   let [searchParams, setSearchParams] = useSearchParams();
   const movieId = searchParams.get("movieId");
 
-  const [movie, setMovie] = useState<Movie | null>(data.results.find((item) => item.id === Number(movieId)) as Movie);
+  const [movie, setMovie] = useState<Movie | null>(data.find((item) => item.id === movieId) as Movie);
+
   const sliderRef = useRef<HTMLDivElement>(null);
 
   function handleNext() {
@@ -65,9 +46,9 @@ function OnGoingPage() {
 
   function selectMovie(movieId: string) {
     setSearchParams({ movieId });
-    setMovie(data.results.find((item) => item.id === Number(movieId)) as Movie);
+    setMovie(data.find((item) => item.id === movieId) as Movie);
   }
-
+  if (!auth?.user) return <Navigate to="/dang-nhap" />;
   return (
     <div className="px-4 relative flex flex-col w-full">
       <section className="overflow-hidden flex gap-3 relative" ref={sliderRef}>
@@ -84,7 +65,7 @@ function OnGoingPage() {
           <MdOutlineNavigateBefore />
         </button>
         {data &&
-          data.results.map((item: Movie, index: number) => (
+          data.map((item: Movie, index: number) => (
             <div
               onClick={() => {
                 selectMovie(item.id.toString());
@@ -112,14 +93,48 @@ function OnGoingPage() {
           ))}
       </section>
       <Separator.Root className="bg-base-content data-[orientation=horizontal]:h-1 data-[orientation=horizontal]:w-full data-[orientation=vertical]:h-full data-[orientation=vertical]:w-px my-6 rounded-full" />
-      {movie && <SeletedSeats movies={data} movie={movie} />}
+      {movie && <SeletedSeats movie={movie} />}
     </div>
   );
 }
 
-function SeletedSeats({ movies, movie }: { movies: MovieResponse; movie: Movie }) {
+//Deafult seats, will be used to reset seats. 10x10 (A1...J10)
+const defaultSeats: Seat[] = Array.from({ length: 10 }, (_, i) =>
+  Array.from({ length: 10 }, (_, j) => ({
+    rowName: String.fromCharCode(65 + i),
+    seatNumber: j + 1,
+  }))
+).flat();
+function SeletedSeats({ movie }: { movie: Movie }) {
   const [chosenSeats, setChosenSeats] = useState<Seat[]>([]);
-  const [time, setTime] = useState("10:00");
+  const [time, setTime] = useState("");
+  const [choosenShowTime, setChoosenShowTime] = useState<ShowTime | null>(null);
+  const { data: showTimes, isLoading: showTimeLoading } = useQuery<ShowTime[]>(["showtimes", movie.id], async () => {
+    const res = await fetch(`https://localhost:7193/api/ShowTimes/movie/${movie.id}?movieId=${movie.id}`);
+    const data = await res.json();
+    return data;
+  });
+
+  const { isLoading: isLoadingSeat, data: reservedSeats } = useQuery<Seat[]>(
+    ["seats", movie.id],
+    async () => {
+      const seletedShowTime = showTimes?.find((item) => {
+        const timeDate = new Date(item.startTime as string);
+        //Get hour and minute
+        const timeString = `${timeDate.getHours()}:${timeDate.getMinutes()}`;
+        return timeString === time;
+      });
+
+      const res = await fetch(`https://localhost:7193/api/Seats/Showtime/${seletedShowTime?.id}`);
+      const data = await res.json();
+      return data;
+    },
+    {
+      staleTime: Infinity,
+      //If time is not selected, don't fetch seats
+      enabled: !!time,
+    }
+  );
 
   const seatToggle = (seat: Seat) => {
     if (chosenSeats.find((item) => item.id === seat.id)) {
@@ -135,15 +150,36 @@ function SeletedSeats({ movies, movie }: { movies: MovieResponse; movie: Movie }
     setDate(date);
   }
   function selectAll() {
+    if (!reservedSeats) return;
     //Select all seats that are not reserved
-    setChosenSeats(datas.seats.filter((item) => item.reserved));
+    setChosenSeats(defaultSeats.filter((item) => !reservedSeats.find((seat) => seat.id === item.id)));
   }
+  const times = useMemo(() => {
+    if (!showTimes) return [];
+
+    //Take only showTimes that in the date selected
+    const filteredShowTimes = showTimes.filter((item) => {
+      const showTimeDate = new Date(item.startTime as string);
+      return showTimeDate.getDate() === date.getDate() && showTimeDate.getMonth() === date.getMonth();
+    });
+
+    //Get all times from showTimes
+    const times = filteredShowTimes.map(
+      (item) => `${new Date(item.startTime as string).getHours()}:${new Date(item.startTime as string).getMinutes()}`
+    );
+    return times;
+  }, [showTimes, date]);
+
+  const isLoading = useMemo(() => {
+    return isLoadingSeat || showTimeLoading;
+  }, [isLoadingSeat, showTimeLoading]);
+
   function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const data: CheckoutFormProps = {
       movie,
       seats: chosenSeats,
-      showTime: time,
+      showTime: choosenShowTime as ShowTime,
       date,
     };
     navigate(`/checkout`, {
@@ -173,17 +209,19 @@ function SeletedSeats({ movies, movie }: { movies: MovieResponse; movie: Movie }
           <section className="w-full my-4 bg-base-100/50 px-4 py-3 rounded-md  space-y-3 border border-base-content/50">
             <div className="font-medium mx-auto w-fit">
               <h3 className="pb-3">Chỗ ngồi: ({chosenSeats.length})</h3>
-              <p className="flex flex-wrap gap-1 justify-center">
-                {chosenSeats.map((item) => (
-                  <span
-                    className="bg-base-content w-10 text-center px-2 py-1 rounded-md text-base-300"
-                    key={`${item.row}${item.column}`}
-                  >
-                    {item.row}
-                    {item.column}
-                  </span>
-                ))}
-              </p>
+              {isLoading && (
+                <p className="flex flex-wrap gap-1 justify-center">
+                  {chosenSeats.map((item) => (
+                    <span
+                      className="bg-base-content w-10 text-center px-2 py-1 rounded-md text-base-300"
+                      key={`${item.rowName}${item.seatNumber}`}
+                    >
+                      {item.rowName}
+                      {item.seatNumber}
+                    </span>
+                  ))}
+                </p>
+              )}
             </div>
           </section>
           <button
@@ -204,12 +242,31 @@ function SeletedSeats({ movies, movie }: { movies: MovieResponse; movie: Movie }
               time={time}
               onChange={(time) => {
                 setTime(time);
+                const set = showTimes?.find((item) => {
+                  const timeDate = new Date(item.startTime as string);
+                  //Get hour and minute
+                  const timeString = `${timeDate.getHours()}:${timeDate.getMinutes()}`;
+                  return timeString === time;
+                });
+
+                setChoosenShowTime(set as ShowTime);
               }}
+              availableTime={times}
             />
-            <SeatMap data={datas} chosenSeats={chosenSeats} seatToggle={seatToggle} />
-            <button className="btn btn-outline btn-ghost mt-12 btn-sm" onClick={selectAll}>
-              Riêng tư
-            </button>
+            {isLoading ||
+              (reservedSeats && (
+                <SeatMap
+                  defaulSeats={defaultSeats}
+                  chosenSeats={chosenSeats}
+                  seatToggle={seatToggle}
+                  reservedSeats={reservedSeats}
+                />
+              ))}
+            {isLoading && (
+              <button className="btn btn-outline btn-ghost mt-12 btn-sm" onClick={selectAll}>
+                Riêng tư
+              </button>
+            )}
           </div>
         </article>
       </div>

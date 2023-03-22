@@ -1,6 +1,7 @@
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { useMemo } from "react";
 import { Link, useLocation } from "react-router-dom";
+import { useAuth } from "../hooks/useAuth";
 
 function Navbar() {
   const navigate = useLocation();
@@ -39,6 +40,7 @@ const items = [
   },
 ];
 function NavbarDropdown() {
+  const auth = useAuth();
   return (
     <DropdownMenu.Root>
       <DropdownMenu.Trigger asChild>
@@ -56,14 +58,31 @@ function NavbarDropdown() {
 
       <DropdownMenu.Portal>
         <DropdownMenu.Content className="bg-base-100 drop-shadow-md px-2 py-3 rounded-md min-w-[25vh] mx-2 border-2 border-base-200">
-          {items.map((item, index) => (
-            <DropdownMenu.Item
-              className="px-3 py-2 hover:bg-base-300 cursor-pointer rounded-md transition-all"
-              key={item.href}
-            >
-              <Link to={item.href}>{item.label}</Link>
-            </DropdownMenu.Item>
-          ))}
+          {items.map((item, index) => {
+            if (auth?.user && index === 2)
+              return (
+                <DropdownMenu.Item
+                  className="px-3 py-2 hover:bg-base-300 cursor-pointer rounded-md transition-all"
+                  key={item.href}
+                >
+                  <button
+                    onClick={() => {
+                      auth.signout();
+                    }}
+                  >
+                    Đăng xuất
+                  </button>
+                </DropdownMenu.Item>
+              );
+            return (
+              <DropdownMenu.Item
+                className="px-3 py-2 hover:bg-base-300 cursor-pointer rounded-md transition-all"
+                key={item.href}
+              >
+                <Link to={item.href}>{item.label}</Link>
+              </DropdownMenu.Item>
+            );
+          })}
         </DropdownMenu.Content>
       </DropdownMenu.Portal>
     </DropdownMenu.Root>

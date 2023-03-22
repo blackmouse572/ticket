@@ -2,13 +2,15 @@ import { useCallback, useMemo, useState } from "react";
 import { GiPopcorn } from "react-icons/gi";
 import { IoTicket } from "react-icons/io5";
 import { MdKeyboardArrowDown, MdKeyboardArrowUp } from "react-icons/md";
-import { Link, useLocation } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import { Movie } from "../entity/Movie";
+import { PlaceOrder } from "../entity/PlaceOrder";
 import { Seat } from "../entity/Seat";
+import { ShowTime } from "../entity/ShowTime";
 export type CheckoutFormProps = {
   movie: Movie;
   seats: Seat[];
-  showTime: string | Date;
+  showTime: ShowTime;
   date: string | Date;
 };
 export type ComboProps = {
@@ -135,8 +137,54 @@ function Checkout() {
         }
       });
     }
+
+    //Add seats price
+    total += seats.length * 80000;
     return total;
   }, [selectedCombos]);
+
+  async function placeOrder() {
+    //If no seats selected nor showtime selected, return
+    if (!seats.length || !showTime) return;
+    const order: PlaceOrder = {
+      products: [],
+      tickets: {
+        showTimeId: showTime.id || "",
+        tickets:
+          seats.map((seat) => ({
+            seatNumber: seat.seatNumber.toString(),
+            seatRow: seat.rowName,
+          })) || [],
+      },
+    };
+
+    //Post order to server
+    try {
+      const header = new Headers();
+      header.append("Origin", "http://localhost:5174");
+      header.append("Access-Control-Request-Method", "POST");
+      header.append("Access-Control-Request-Headers", "content-type");
+      header.append("Access-Control-Allow-Origin", "http://localhost:5174");
+      header.append("Content-Type", "text/plain");
+
+      const res = await fetch("https://localhost:7193/api/Tickets/placeOrder", {
+        method: "POST",
+        body: JSON.stringify(order),
+        headers: header,
+        credentials: "include",
+      });
+
+      if (res.status === 200) {
+        alert("Đặt vé thành công");
+        console.log(res);
+      } else {
+        alert("Đặt vé thất bại");
+      }
+    } catch (e) {
+      console.log(e);
+    }
+  }
+
   return (
     <div className="container mx-auto bg-base-300 h-screen grid grid-cols-12 gap-3">
       {/* Combo popcorn and drinks*/}
@@ -150,6 +198,7 @@ function Checkout() {
           <div className="grid grid-cols-3 gap-4">
             {Combo.map((combo) => (
               <div
+                key={combo.name}
                 className={
                   "bg-base-300 px-3 py-2 rounded-md flex items-center justify-between cursor-pointer col-span-3 lg:col-span-1"
                 }
@@ -187,10 +236,10 @@ function Checkout() {
               <span>Ngày chiếu</span>
               <h3 className="font-bold">
                 <span>
-                  {date.toLocaleString("vi-Vn", {
-                    weekday: "short",
+                  {new Date(showTime.startTime as string).toLocaleDateString("vi-VN", {
+                    weekday: "long",
                     year: "numeric",
-                    month: "numeric",
+                    month: "long",
                     day: "numeric",
                   })}
                 </span>
@@ -201,12 +250,9 @@ function Checkout() {
             <section className="flex justify-between w-full text-xs lg:text-base ">
               <span>Giờ chiếu</span>
               <h3 className="font-bold">
-                <span>
-                  {showTime.toLocaleString("vi-Vn", {
-                    hour: "numeric",
-                    minute: "numeric",
-                  })}
-                </span>
+                <span>{`${new Date(showTime.startTime as string).getHours()}:${new Date(
+                  showTime.endTime as string
+                ).getMinutes()}`}</span>
               </h3>
             </section>
 
@@ -214,7 +260,7 @@ function Checkout() {
             <section className="flex justify-between w-full text-sm lg:text-base ">
               <span>Phòng chiếu</span>
               <h3 className="font-bold">
-                <span>1</span>
+                <span>{showTime.roomNumberId}</span>
               </h3>
             </section>
           </div>
@@ -228,7 +274,7 @@ function Checkout() {
           <div className="divider divider-horizontal h-[0.05rem] bg-base-content/40 space-y-3 my-3 w-full" />
           <div className="w-full space-y-3 font-semibold">
             {seats.map((seat) => (
-              <div className="flex justify-between">
+              <div className="flex justify-between" key={seat.id}>
                 <p>{seat.id}</p>
                 <p>80.000</p>
               </div>
@@ -239,7 +285,7 @@ function Checkout() {
               //Render selected combos
               selectedCombos &&
                 Object.keys(selectedCombos).map((comboName) => (
-                  <div className="flex justify-between">
+                  <div className="flex justify-between" key={comboName}>
                     <p>
                       {comboName} x{selectedCombos[comboName]}
                     </p>
@@ -265,10 +311,15 @@ function Checkout() {
 
           <div></div>
 
-          <button className="btn btn-primary w-full rounded-full my-4 btn-sm">
-            <Link to="/payment">
-              Thanh toán bằng <span className="text-bold text-error">VNPAY</span>
-            </Link>
+          <button
+            className="btn btn-primary w-full rounded-full my-4 btn-sm"
+            onClick={() => {
+              placeOrder();
+            }}
+          >
+            {/* <Link to="/payment"> */}
+            Thanh toán bằng <span className="text-bold text-error">VNPAY</span>
+            {/* </Link> */}
           </button>
         </article>
       </div>
