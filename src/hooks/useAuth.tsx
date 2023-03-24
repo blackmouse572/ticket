@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
+import appfetch from "../lib/axios";
 
 const authContext = createContext<ReturnType<typeof useProvideAuth> | null>(null);
 
@@ -30,6 +31,7 @@ type User = {
   dob: string;
   fullname: string;
   phoneNumber: string;
+  token: string;
 };
 function useProvideAuth() {
   const [user, setUser] = useState<User | null>(null);
@@ -49,49 +51,49 @@ function useProvideAuth() {
   }
 
   const signin = async ({ email, password }: LoginProps) => {
-    const res = await fetch("https://localhost:7193/api/Authen/login", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
+    const res = await appfetch.post(
+      "/Authen/login",
+      {
         email,
         password,
-      }),
-      credentials: "include",
-    });
+      },
+      {}
+    );
     if (res.status !== 200) throw new Error("Tài khoản hoặc mật khẩu không đúng");
 
-    const data = await res.json();
+    const data = await res.data;
 
-    setUser(data);
-    saveUser(data);
+    const { token, user } = data;
+
+    user.token = token;
+
     if (data.error) {
       throw new Error(data.error);
     }
+    saveUser(user);
+    setUser(user);
     return data;
   };
   const signup = async ({ dob, email, fullname, password, phoneNumber }: RegisterProps) => {
     try {
-      const res = await fetch("https://localhost:7193/api/Authen/register", {
+      const res = await appfetch("/Authen/register", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email,
-          password,
-          fullname,
+        data: {
           dob,
+          email,
+          fullname,
+          password,
           phoneNumber,
-        }),
+        },
       });
-      const data = await res.json();
+      const data = res.data;
       if (data.error) {
         throw new Error(data.error);
       }
-      setUser(data);
-      saveUser(data);
+      const { token, user } = data;
+      user.token = token;
+      setUser(user);
+      saveUser(user);
       return data;
     } catch (error) {
       console.log(error);
@@ -104,9 +106,13 @@ function useProvideAuth() {
   useEffect(() => {
     //Load user from local storage
     const user = getUser();
+
     if (user) {
       setUser(user);
     }
+
+    //Cleanup
+    return () => {};
   }, []);
   // Return the user object and auth methods
   return {

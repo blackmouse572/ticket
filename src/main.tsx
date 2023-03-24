@@ -10,10 +10,10 @@ export const queryClient = new QueryClient();
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
   <React.StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <ProvideAuth>
+    <ProvideAuth>
+      <QueryClientProvider client={queryClient}>
         <RouterProvider router={router} />
-      </ProvideAuth>
-    </QueryClientProvider>
+      </QueryClientProvider>
+    </ProvideAuth>
   </React.StrictMode>
 );
