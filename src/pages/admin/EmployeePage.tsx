@@ -2,8 +2,9 @@ import * as Dialog from "@radix-ui/react-dialog";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { AxiosResponse } from "axios";
 import React from "react";
-import { IoAdd } from "react-icons/io5";
+import { IoAdd, IoArrowBack } from "react-icons/io5";
 import { TbEditCircle, TbTrashXFilled } from "react-icons/tb";
+import { useNavigate } from "react-router-dom";
 import { Employee } from "../../entity/Employee";
 import { useToast } from "../../hooks/useToast";
 import appfetch from "../../lib/axios";
@@ -55,11 +56,23 @@ function EmployeePage() {
       },
     }
   );
+  const navigate = useNavigate();
 
   return (
     <div className="container mx-auto">
       <div className="flex justify-between items-center my-5">
-        <h3 className="text-2xl font-semibold leading-tight">Quản lý nhân viên</h3>
+        <div className="text-2xl font-medium leading-3 flex gap-2">
+          <span
+            className="cursor-pointer"
+            onClick={() => {
+              navigate(-1);
+            }}
+          >
+            <IoArrowBack />
+          </span>
+
+          <h3 className="">Quản lý nhân viên</h3>
+        </div>
         <AddEmployeeDialog />
       </div>
       <div className="overflow-y-auto">
