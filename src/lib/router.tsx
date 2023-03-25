@@ -1,18 +1,20 @@
+import { lazy } from "react";
 import { createBrowserRouter } from "react-router-dom";
 import { Product } from "../entity/Product";
 import AdminLayout from "../pages/admin/AdminLayout";
 import Dashboard from "../pages/admin/Dashboard";
-import EmployeePage, { getEmployees } from "../pages/admin/Employee";
-import ProductPage from "../pages/admin/Product";
-import Tickets from "../pages/admin/Tickets";
+import EmployeePage from "../pages/admin/EmployeePage";
+import ProductPage from "../pages/admin/ProductPage";
+import TicketsPage from "../pages/admin/TicketsPage";
 import Checkout from "../pages/Checkout";
 import Home from "../pages/Home";
 import Login from "../pages/Login";
 import MainLayout from "../pages/MainLayout";
-import MoviePage from "../pages/MoviePage";
 import OnGoingPage from "../pages/OnGoingPage";
 import Register from "../pages/Register";
 import appfetch from "./axios";
+const MoviesPage = lazy(() => import("../pages/admin/MoviesPage"));
+const MoviePage = lazy(() => import("../pages/MoviePage"));
 export const router = createBrowserRouter([
   {
     path: "/",
@@ -88,7 +90,7 @@ export const router = createBrowserRouter([
       },
       {
         path: "ticket",
-        element: <Tickets />,
+        element: <TicketsPage />,
       },
       {
         path: "product",
@@ -97,6 +99,10 @@ export const router = createBrowserRouter([
       {
         path: "employee",
         element: <EmployeePage />,
+      },
+      {
+        path: "movie",
+        element: <MoviesPage />,
       },
     ],
   },

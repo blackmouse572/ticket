@@ -7,7 +7,8 @@ export interface Movie {
   genre_ids: number[];
   id: string;
   original_title: string;
-  original_language: string;
+  language: string;
+  runTime: string;
   title: string;
   backdropPath: string;
   popularity: number;
