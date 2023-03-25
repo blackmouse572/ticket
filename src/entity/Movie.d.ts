@@ -21,11 +21,12 @@ export interface Movie {
   vote_average: number;
   revenue?: number;
   runtime?: number;
-  status?: "Rumored" | "Planned" | "In Production" | "Post Production" | "Released" | "Canceled";
+  status?: boolean;
   tagline?: string;
   genres?: Genre[];
   budget?: number;
   videos: Video[];
+  video?: boolean;
   showTimes?: ShowTime[];
 }
 

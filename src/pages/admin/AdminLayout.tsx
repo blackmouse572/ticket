@@ -1,4 +1,4 @@
-import { Outlet } from "react-router-dom";
+import { Navigate, Outlet } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 
 function AdminLayout() {
@@ -6,7 +6,7 @@ function AdminLayout() {
 
   if (!auth) return null;
   if (!auth.user) return null;
-  if (auth.user.email !== "admin@gmail.com") return null;
+  if (auth.user.email !== "admin@gmail.com") return <Navigate to={"/"} />;
 
   return <Outlet />;
 }

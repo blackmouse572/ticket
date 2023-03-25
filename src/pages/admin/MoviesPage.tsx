@@ -11,7 +11,7 @@ import appfetch from "../../lib/axios";
 import { queryClient } from "../../main";
 
 export default function MoviesPage() {
-  const [selectedMovie, setSelectedMovie] = React.useState<Movie>();
+  const [selectedMovie, setSelectedMovie] = React.useState<Movie | null>();
   const { data: movies, isLoading } = useQuery<Movie[]>(["movies"], async () => {
     const res = await appfetch<Movie[]>("/Movies");
     const movies = res.data;
@@ -154,7 +154,7 @@ export default function MoviesPage() {
 }
 
 type MovieDialogProps = {
-  movie: Movie;
+  movie: Movie | null;
   children?: React.ReactNode;
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
@@ -548,6 +548,10 @@ export function UpdateMovieDialog({ movie, isOpen, onOpenChange }: MovieDialogPr
   const updateMovie = useMutation(
     (data: any) => appfetch.put<PostMovie, AxiosResponse<Movie>>(`/Movies/${movie?.id}`, data),
     {
+      onMutate: (data) => {
+        console.log("onMutate", data);
+      },
+
       onSuccess: (data) => {
         const movie = data.data;
 
@@ -557,29 +561,33 @@ export function UpdateMovieDialog({ movie, isOpen, onOpenChange }: MovieDialogPr
           type: "success",
           id: "update-movie-success",
         });
-        queryClient.setQueryData(["movies"], (oldData: Movie[] | any) => {
-          //replace the old employee with the new one
-          return oldData.map((old: Movie) => {
-            if (old.id === movie.id) {
-              return movie;
-            }
-            return old;
-          });
+        queryClient.setQueryData<Movie[]>(["movies"], (oldData) => {
+          if (!oldData) return;
+
+          const index = oldData.findIndex((m) => m.id === movie.id);
+
+          if (index !== -1) {
+            oldData[index] = movie;
+          }
+
+          return oldData;
         });
       },
       onError: (error) => {
         addToast({
           title: "Cập nhật phim thất bại",
-          message: `Phim ${movie.title} không thể được cập nhật, kiểm tra log để biết thêm chi tiết`,
+          message: `Phim ${movie?.title} không thể được cập nhật, kiểm tra log để biết thêm chi tiết`,
           type: "error",
           id: "update-movie-error",
         });
-        console.error("...Error updating movie", movie.title, " with data: ", error);
+        console.error("...Error updating movie", movie?.title, " with data: ", error);
       },
     }
   );
   function onSubmit(e: any) {
     e.preventDefault();
+    //Checkbox adult
+
     const movie: PostMovie = {
       title: e.target.title.value,
       name: e.target.name.value,
@@ -589,13 +597,13 @@ export function UpdateMovieDialog({ movie, isOpen, onOpenChange }: MovieDialogPr
       language: e.target.language.value,
       releaseDate: e.target.releaseDate.value,
       runTime: e.target.runTime.value,
-      adult: e.target.adult.value === "on" ? true : false,
-      status: e.target.status.value === "on" ? true : false,
+      adult: e.target.adult.checked,
+      status: e.target.status.checked,
       budget: e.target.budget.value,
       revenue: e.target.revenue.value,
       vote_average: e.target.vote_average.value,
       vote_count: e.target.vote_count.value,
-      video: e.target.video.value === "on" ? true : false,
+      video: e.target.video.checked,
       popularity: e.target.popularity.value,
       tagline: e.target.tagline.value,
       homePage: e.target.homePage.value,
@@ -731,18 +739,25 @@ export function UpdateMovieDialog({ movie, isOpen, onOpenChange }: MovieDialogPr
                   <span className="label-text">status</span>
                 </label>
                 <input
-                  defaultValue={movie?.status}
                   type="checkbox"
                   placeholder=""
                   className="checkbox"
                   id={"status"}
                   name="status"
+                  defaultChecked={movie?.status}
                 />
 
                 <label className="label" htmlFor="adult">
                   <span className="label-text">adult</span>
                 </label>
-                <input type="checkbox" placeholder="" className="checkbox" id={"adult"} name="adult" />
+                <input
+                  type="checkbox"
+                  placeholder=""
+                  className="checkbox"
+                  id={"adult"}
+                  name="adult"
+                  defaultChecked={movie?.adult}
+                />
               </div>
 
               <div>
@@ -814,7 +829,14 @@ export function UpdateMovieDialog({ movie, isOpen, onOpenChange }: MovieDialogPr
                 <label className="label" htmlFor="video">
                   <span className="label-text">video</span>
                 </label>
-                <input type="checkbox" placeholder="" className="checkbox" id={"video"} name="video" />
+                <input
+                  type="checkbox"
+                  placeholder=""
+                  className="checkbox"
+                  id={"video"}
+                  name="video"
+                  defaultChecked={movie?.video}
+                />
               </div>
             </div>
 
