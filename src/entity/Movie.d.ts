@@ -3,6 +3,10 @@ export interface Movie {
   posterPath: string;
   adult: boolean;
   overview: string;
+  director: string;
+  cast: string;
+  releaseDate: string;
+  homePage: string;
   release_date: string;
   genre_ids: number[];
   id: string;

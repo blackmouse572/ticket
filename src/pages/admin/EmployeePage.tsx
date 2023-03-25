@@ -26,6 +26,35 @@ function EmployeePage() {
     setSeletedEmployee(employee);
     setIsDialogOpen(true);
   }
+  const { addToast } = useToast();
+  const deleteEmployee = useMutation(
+    async (id: string) => {
+      const res = await appfetch.delete(`/Employees/${id}`);
+      return id;
+    },
+    {
+      onSuccess: (id) => {
+        addToast({
+          title: "Success",
+          message: `Nhân viên ${seletedEmployee.name} đã được xóa khỏi hệ thống`,
+          type: "success",
+          id: "delete-employee-success",
+        });
+        queryClient.setQueryData(["employee"], (oldData: any) => {
+          return oldData.filter((employee: Employee) => employee.id !== id);
+        });
+      },
+      onError: (error) => {
+        addToast({
+          title: "Error",
+          message: "Có lỗi xảy ra, kiểm tra log để biết thêm chi tiết",
+          type: "error",
+          id: "delete-employee-error",
+        });
+        console.error(error);
+      },
+    }
+  );
 
   return (
     <div className="container mx-auto">
@@ -69,7 +98,10 @@ function EmployeePage() {
                     >
                       <TbEditCircle />
                     </button>
-                    <button className="btn btn-error hover:bg-error text-error hover:text-white btn-circle btn-ghost text-xl">
+                    <button
+                      className="btn btn-error hover:bg-error text-error hover:text-white btn-circle btn-ghost text-xl"
+                      onClick={() => deleteEmployee.mutate(employee.id!)}
+                    >
                       <TbTrashXFilled />
                     </button>
                   </td>
