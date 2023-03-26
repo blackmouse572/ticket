@@ -2,11 +2,6 @@ import { lazy } from "react";
 import { createBrowserRouter } from "react-router-dom";
 import { Product } from "../entity/Product";
 import AdminLayout from "../pages/admin/AdminLayout";
-import Dashboard from "../pages/admin/Dashboard";
-import EmployeePage from "../pages/admin/EmployeePage";
-import ProductPage from "../pages/admin/ProductPage";
-import TicketsPage from "../pages/admin/TicketsPage";
-import Checkout from "../pages/Checkout";
 import Home from "../pages/Home";
 import Login from "../pages/Login";
 import MainLayout from "../pages/MainLayout";
@@ -14,7 +9,15 @@ import OnGoingPage from "../pages/OnGoingPage";
 import Register from "../pages/Register";
 import appfetch from "./axios";
 const MoviesPage = lazy(() => import("../pages/admin/MoviesPage"));
+const TicketsPage = lazy(() => import("../pages/admin/TicketsPage"));
+const Checkout = lazy(() => import("../pages/Checkout"));
+const ShowTimePage = lazy(() => import("../pages/admin/ShowTime"));
+const Dashboard = lazy(() => import("../pages/admin/Dashboard"));
+const EmployeePage = lazy(() => import("../pages/admin/EmployeePage"));
+const ProductPage = lazy(() => import("../pages/admin/ProductPage"));
+const CustomerPage = lazy(() => import("../pages/admin/CustomerPage"));
 const MoviePage = lazy(() => import("../pages/MoviePage"));
+
 export const router = createBrowserRouter([
   {
     path: "/",
@@ -103,6 +106,14 @@ export const router = createBrowserRouter([
       {
         path: "movie",
         element: <MoviesPage />,
+      },
+      {
+        path: "showtime",
+        element: <ShowTimePage />,
+      },
+      {
+        path: "customer",
+        element: <CustomerPage />,
       },
     ],
   },

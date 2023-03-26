@@ -5,40 +5,58 @@ import React from "react";
 import { IoAdd, IoArrowBack } from "react-icons/io5";
 import { TbEditCircle, TbTrashXFilled } from "react-icons/tb";
 import { useNavigate } from "react-router-dom";
-import { Product } from "../../entity/Product";
+import { Movie } from "../../entity/Movie";
+import { ShowTime } from "../../entity/ShowTime";
 import { useToast } from "../../hooks/useToast";
 import appfetch from "../../lib/axios";
 import { queryClient } from "../../main";
 
-export default function ProductPage() {
-  const [selectedProduct, setSelectedProdcut] = React.useState<Product | null>();
-  const { data: movies, isLoading } = useQuery<Product[]>(["products"], async () => {
-    const res = await appfetch<Product[]>("/Products");
-    const products = res.data;
-    if (!products) throw new Error("Not found");
-    return products;
+export default function ShowTimePage() {
+  const [selectedProduct, setSelectedProdcut] = React.useState<ShowTime | null>();
+  const { data: showTimes, isLoading } = useQuery(["showtime"], async () => {
+    const res = await appfetch<ShowTime[]>("/ShowTimes");
+    //Get movies from response movieId
+    const movieIds = res.data.map((showtime) => showtime.movieId);
+
+    const movies = await Promise.all(
+      movieIds.map(async (movieId) => {
+        const res = await appfetch.get<Movie, AxiosResponse<Movie>>(`/Movies/${movieId}`);
+        return res.data;
+      })
+    );
+    //Add movie to showtime
+    const showTimes = res.data.map((showtime) => {
+      const movie = movies.find((movie) => movie.id === showtime.movieId);
+      return {
+        ...showtime,
+        movie,
+      };
+    });
+
+    if (!showTimes) throw new Error("Not found");
+    return showTimes;
   });
   const [isDialogOpen, setIsDialogOpen] = React.useState(false);
-  function setProduct(product: Product) {
-    setSelectedProdcut(product);
+  function setST(showtime: ShowTime) {
+    setSelectedProdcut(showtime);
     setIsDialogOpen(true);
   }
   const { addToast } = useToast();
 
   const removeProduct = useMutation(
-    async (product: Product) => {
+    async (id: string) => {
       try {
-        const res = await appfetch<Product, AxiosResponse<Product>>(`/Products/${product.id}`, {
+        const res = await appfetch<ShowTime, AxiosResponse<ShowTime>>(`/ShowTimes/${id}`, {
           method: "DELETE",
         });
 
-        return product;
+        return id;
       } catch (error: any) {
         //If status code is 204, return the movie
         console.log("error response: ", error);
 
         if (error.response.status === 204) {
-          return product;
+          return id;
         }
         throw error;
       }
@@ -47,21 +65,21 @@ export default function ProductPage() {
       onSuccess(data) {
         addToast({
           title: "Success",
-          message: `Xoá sản phẩm ${data.name} thành công`,
+          message: `Xoá thành công`,
           type: "success",
           id: "delete-movie-success",
         });
 
         const product = data;
-        queryClient.setQueryData(["products"], (oldData: any) => {
-          return oldData.filter((m: Product) => m.id !== product.id);
+        queryClient.setQueryData(["showtime"], (oldData: any) => {
+          return oldData.filter((m: ShowTime) => m.id !== product);
         });
       },
-      onError(error, product, _) {
+      onError(error) {
         console.error(error);
         addToast({
           title: "Error",
-          message: `Lỗi khi xoá sản phẩm ${product.name}, kiểm tra log để biết thêm chi tiết`,
+          message: `Lỗi khi xoá , kiểm tra log để biết thêm chi tiết`,
           type: "error",
           id: "delete-movie-error",
         });
@@ -82,7 +100,7 @@ export default function ProductPage() {
             <IoArrowBack />
           </span>
 
-          <h3 className="">Quản lý Sản phẩm</h3>
+          <h3 className="">Quản lý lịch chiếu</h3>
         </div>
         <AddMovieDialog />
       </div>
@@ -91,8 +109,10 @@ export default function ProductPage() {
           <thead>
             <tr>
               <th></th>
-              <th className="px-4 py-2">Name</th>
-              <th className="px-4 py-2">Price</th>
+              <th className="px-4 py-2">Phim</th>
+              <th className="px-4 py-2">Phòng</th>
+              <th className="px-4 py-2">Bắt đầu</th>
+              <th className="px-4 py-2">Kết thúc</th>
               <th></th>
             </tr>
           </thead>
@@ -105,24 +125,24 @@ export default function ProductPage() {
                 </td>
               </tr>
             )}
-            {movies &&
-              movies.map((product, index) => (
-                <tr key={product.id}>
-                  <td className="border border-base-300 px-4 py-2">
-                    <img className="aspect-square max-h-28 object-cover mx-auto " src={product.image} alt="" />
-                  </td>
-                  <td className="border border-base-300 px-4 py-2">{product.name}</td>
-                  <td className="border border-base-300 px-4 py-2">{product.price}</td>
+            {showTimes &&
+              showTimes.map((showtime, index) => (
+                <tr key={showtime.id}>
+                  <td className="border border-base-300 px-4 py-2">{index + 1}</td>
+                  <td className="border border-base-300 px-4 py-2">{showtime.movie?.title}</td>
+                  <td className="border border-base-300 px-4 py-2">{showtime.roomNumberId}</td>
+                  <td className="border border-base-300 px-4 py-2">{showtime.startTime}</td>
+                  <td className="border border-base-300 px-4 py-2">{showtime.endTime}</td>
                   <td className="border border-base-300 px-4 py-2">
                     <button
                       className="btn btn-primary btn-circle btn-ghost text-primary hover:text-white hover:bg-primary text-xl"
-                      onClick={() => setProduct(product)}
+                      onClick={() => setST(showtime)}
                     >
                       <TbEditCircle />
                     </button>
                     <button
                       className="btn btn-error hover:bg-error text-error hover:text-white btn-circle btn-ghost text-xl"
-                      onClick={() => removeProduct.mutate(product)}
+                      onClick={() => removeProduct.mutate(showtime.id || "")}
                     >
                       <TbTrashXFilled />
                     </button>
@@ -135,7 +155,7 @@ export default function ProductPage() {
               <td colSpan={6}>
                 <div className="flex justify-end gap-5">
                   <h3>Tổng số: </h3>
-                  <p>{movies && movies.length}</p>
+                  <p>{showTimes && showTimes.length}</p>
                 </div>
               </td>
             </tr>
@@ -148,35 +168,33 @@ export default function ProductPage() {
 }
 
 type MovieDialogProps = {
-  movie: Product | null;
+  movie: ShowTime | null;
   children?: React.ReactNode;
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
 };
 
 type PostProduct = {
-  name: string;
-  price: number;
-  image: string;
+  movieId: string;
+  roomNumberId: number;
+  startTime: string;
 };
 
 function AddMovieDialog() {
   const { addToast } = useToast();
 
   const addProduct = useMutation(
-    (product: PostProduct) => appfetch.post<PostProduct, AxiosResponse<Product>>("/Products", { ...product }),
+    (product: PostProduct) => appfetch.post<PostProduct, AxiosResponse<ShowTime>>("/ShowTimes", { ...product }),
     {
       onSuccess: (data) => {
         const product = data.data;
         addToast({
           title: "Thành công",
-          message: `Thêm thành công phim ${product.name}`,
+          message: `Thêm thành công `,
           type: "success",
           id: "add-movie-success",
         });
-        queryClient.setQueryData(["products"], (oldData: any) => {
-          return [...oldData, product];
-        });
+        queryClient.invalidateQueries(["showtime"]);
       },
       onError: (error) => {
         addToast({
@@ -191,10 +209,13 @@ function AddMovieDialog() {
   );
   function onSubmit(e: any) {
     e.preventDefault();
+    let startTime = e.target.startTime.value;
+    //Convert to ISOString
+    startTime = new Date(startTime).toISOString();
     const movie: PostProduct = {
-      price: Number(e.target.price.value),
-      name: e.target.name.value,
-      image: e.target.image.value,
+      movieId: e.target.movieId.value,
+      roomNumberId: e.target.roomNumberId.value,
+      startTime: startTime,
     };
     addProduct.mutate(movie);
   }
@@ -214,31 +235,45 @@ function AddMovieDialog() {
       </Dialog.Trigger>
       <Dialog.DialogPortal>
         <Dialog.Content className="data-[state=open]:animate-contentShow fixed top-[50%] left-[50%] max-h-[85vh]  max-w-[50vw] translate-x-[-50%] translate-y-[-50%] rounded-md bg-base-100 px-4 py-2 focus:outline-none overflow-auto">
-          <Dialog.Title className="text-xl font-bold text-base-content mt-4">Thêm sản phẩm</Dialog.Title>
+          <Dialog.Title className="text-xl font-bold text-base-content mt-4">Thêm lich chieu</Dialog.Title>
           <Dialog.Description className="text-sm font-medium text-gray-500">
             Click outside the dialog or press the Escape key to close it.
           </Dialog.Description>
           <form onSubmit={onSubmit} className="form-control">
             <div className="flex justify-between gap-5">
               <div>
-                <label className="label" htmlFor="name">
-                  <span className="label-text">Name</span>
+                <label className="label" htmlFor="movieId">
+                  <span className="label-text">movieId</span>
                 </label>
-                <input id={"name"} type="text" placeholder="" className="input input-bordered" name="name" required />
+                <input
+                  id={"movieId"}
+                  type="text"
+                  placeholder=""
+                  className="input input-bordered"
+                  name="movieId"
+                  required
+                />
               </div>
 
               <div>
-                <label className="label" htmlFor="Image">
-                  <span className="label-text">Image</span>
+                <label className="label" htmlFor="roomNumberId">
+                  <span className="label-text">room number id</span>
                 </label>
-                <input id={"image"} type="text" placeholder="" className="input input-bordered" name="image" required />
+                <input
+                  id={"roomNumberId"}
+                  type="text"
+                  placeholder=""
+                  className="input input-bordered"
+                  name="roomNumberId"
+                  required
+                />
               </div>
 
               <div>
-                <label htmlFor="price" className="label">
-                  <span className="label-text">Price</span>
+                <label htmlFor="startTime" className="label">
+                  <span className="label-text">Start time</span>
                 </label>
-                <input id={"price"} type="number" placeholder="2300000" className="input input-bordered" name="price" />
+                <input id={"startTime"} type="datetime-local" className="input input-bordered" name="startTime" />
               </div>
             </div>
 
@@ -266,37 +301,26 @@ function AddMovieDialog() {
 export function UpdateMovieDialog({ movie: product, isOpen, onOpenChange }: MovieDialogProps) {
   const { addToast } = useToast();
   const update = useMutation(
-    (data: any) => appfetch.put<PostProduct, AxiosResponse<Product>>(`/Products/${product?.id}`, data),
+    (data: any) => appfetch.put<PostProduct, AxiosResponse<ShowTime>>(`/ShowTimes/${product?.id}`, data),
     {
       onSuccess: (data) => {
         const prodcut = data.data;
 
         addToast({
-          title: "Cập nhật phim thành công",
-          message: `Sản phẩm ${prodcut.name} đã được cập nhật thành công`,
+          title: "Cập nhật thành công",
+          message: `Được cập nhật thành công`,
           type: "success",
           id: "update-movie-success",
         });
-        queryClient.setQueryData<Product[]>(["products"], (oldData) => {
-          if (!oldData) return;
-
-          const index = oldData.findIndex((m) => m.id === prodcut.id);
-
-          if (index !== -1) {
-            oldData[index] = prodcut;
-          }
-
-          return oldData;
-        });
+        queryClient.invalidateQueries(["showtime"]);
       },
       onError: (error) => {
         addToast({
           title: "Cập nhật phim thất bại",
-          message: `Sản phẩm ${product?.name} không thể được cập nhật, kiểm tra log để biết thêm chi tiết`,
+          message: `không thể được cập nhật, kiểm tra log để biết thêm chi tiết`,
           type: "error",
           id: "update-movie-error",
         });
-        console.error("...Error updating movie", product?.name, " with data: ", error);
       },
     }
   );
@@ -305,11 +329,10 @@ export function UpdateMovieDialog({ movie: product, isOpen, onOpenChange }: Movi
     //Checkbox adult
 
     const product: PostProduct = {
-      name: e.target.name.value,
-      price: Number(e.target.price.value),
-      image: e.target.image.value,
+      movieId: e.target.movieId.value,
+      roomNumberId: e.target.roomNumberId.value,
+      startTime: e.target.startTime.value,
     };
-    console.log("...Updating movie", product.name, " with data: ", product);
     update.mutate(product);
   }
   return (
@@ -326,44 +349,46 @@ export function UpdateMovieDialog({ movie: product, isOpen, onOpenChange }: Movi
             <div className="flex justify-between gap-5">
               <div>
                 <label className="label" htmlFor="name">
-                  <span className="label-text">Name</span>
+                  <span className="label-text">Movie id</span>
                 </label>
                 <input
-                  id={"name"}
+                  id={"movieId"}
                   type="text"
                   placeholder=""
                   className="input input-bordered"
-                  name="name"
+                  name="movieId"
                   required
-                  defaultValue={product?.name}
+                  defaultValue={product?.movieId}
                 />
               </div>
               <div>
                 <label className="label" htmlFor="Image">
-                  <span className="label-text">Image</span>
+                  <span className="label-text">Room number</span>
                 </label>
                 <input
-                  id={"image"}
+                  id={"roomNumberId"}
                   type="text"
                   placeholder=""
                   className="input input-bordered"
-                  name="image"
+                  name="roomNumberId"
                   required
-                  defaultValue={product?.image}
+                  defaultValue={product?.roomNumberId}
                 />
               </div>
 
               <div>
-                <label htmlFor="price" className="label">
-                  <span className="label-text">Price</span>
+                <label htmlFor="startTime" className="label">
+                  <span className="label-text">StartTime</span>
                 </label>
                 <input
-                  id={"price"}
-                  type="number"
-                  placeholder="2300000"
+                  id={"startTime"}
+                  type="datetime-local"
                   className="input input-bordered"
-                  name="price"
-                  defaultValue={product?.price}
+                  name="startTime"
+                  defaultValue={
+                    //Covert from ISO to local time
+                    product?.startTime ? new Date(product?.startTime).toISOString().slice(0, 16) : undefined
+                  }
                 />
               </div>
             </div>

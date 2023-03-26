@@ -1,5 +1,5 @@
 export interface IBase {
   id?: string;
-  createdAt?: Date;
-  updatedAt?: Date;
+  createAt?: string;
+  updateAt?: string;
 }

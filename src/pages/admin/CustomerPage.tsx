@@ -3,25 +3,26 @@ import { AxiosResponse } from "axios";
 import { IoArrowBack, IoCheckmark, IoRemove } from "react-icons/io5";
 import { TbTrashXFilled } from "react-icons/tb";
 import { useNavigate } from "react-router-dom";
-import { Order } from "../../entity/Order";
+import { Customer } from "../../entity/Customer";
 import { useToast } from "../../hooks/useToast";
 import appfetch from "../../lib/axios";
 import { queryClient } from "../../main";
 
 type Props = {};
 
-function TicketsPage({}: Props) {
-  const { data: orders, isLoading } = useQuery<Order[]>(["orders"], async () => {
-    const res = await appfetch.get<Order[], AxiosResponse<Order[]>>("/Orders");
+function CustomerPage({}: Props) {
+  const { data: customers, isLoading } = useQuery<Customer[]>(["customers"], async () => {
+    const res = await appfetch.get<Customer[], AxiosResponse<Customer[]>>("/Customers");
 
     return res.data;
   });
+
   const navigate = useNavigate();
   const { addToast } = useToast();
 
-  const removeOrder = useMutation<Order, Error, Order>(
+  const removeOrder = useMutation<Customer, Error, Customer>(
     async (order) => {
-      const res = await appfetch.delete(`/Orders/${order.id}`);
+      const res = await appfetch.delete(`/Customers/${order.id}`);
       return res.data;
     },
     {
@@ -33,7 +34,7 @@ function TicketsPage({}: Props) {
           id: "remove-order",
         });
         //Remove from cache
-        queryClient.invalidateQueries(["orders"]);
+        queryClient.invalidateQueries(["customers"]);
       },
 
       onError: (error) => {
@@ -60,7 +61,7 @@ function TicketsPage({}: Props) {
             <IoArrowBack />
           </span>
 
-          <h3 className="">Quản lý Order</h3>
+          <h3 className="">Quản lý khách hàng</h3>
         </div>
       </div>
       <div className="overflow-y-auto">
@@ -68,11 +69,13 @@ function TicketsPage({}: Props) {
           <thead>
             <tr>
               <th></th>
-              <th className="px-4 py-2">Ticket Amount</th>
-              <th className="px-4 py-2">Seats</th>
-              <th className="px-4 py-2">Products</th>
-              <th className="px-4 py-2">Status</th>
-              <th className="px-4 py-2">Total</th>
+              <th className="px-4 py-2">Name</th>
+              <th className="px-4 py-2">Email</th>
+              <th className="px-4 py-2">Confirmed Email</th>
+              <th className="px-4 py-2">Date of birth</th>
+              <th className="px-4 py-2">Point</th>
+              <th className="px-4 py-2">Phone</th>
+              <th className="px-4 py-2">Join at</th>
               <th></th>
             </tr>
           </thead>
@@ -85,38 +88,34 @@ function TicketsPage({}: Props) {
                 </td>
               </tr>
             )}
-            {orders &&
-              orders.map((order, index) => (
-                <tr key={order.id}>
+            {customers &&
+              customers.map((cus, index) => (
+                <tr key={cus.id}>
                   <td className="border border-base-300 px-4 py-2">
                     <span className="font-bold">{index + 1}</span>
                   </td>
-                  <td className="border border-base-300 px-4 py-2">{order.tickets?.length}</td>
+                  <td className="border border-base-300 px-4 py-2">{cus.name}</td>
+                  <td className="border border-base-300 px-4 py-2">{cus.email}</td>
                   <td className="border border-base-300 px-4 py-2">
-                    {order.tickets?.map((ticket, index) => (
-                      <span key={ticket.id}>
-                        {ticket.seat?.rowName}
-                        {ticket.seat.seatNumber}
-                        {order.tickets && index < order.tickets?.length - 1 ? ", " : ""}
-                      </span>
-                    ))}
+                    {cus.emailConfirm ? (
+                      <IoCheckmark className="text-green-500" />
+                    ) : (
+                      <IoRemove className="text-red-500" />
+                    )}
                   </td>
-                  <td className="border border-base-300 px-4 py-2">
-                    {order.orderItems && order.orderItems?.length > 0
-                      ? order.orderItems?.map((item, index) => (
-                          <span key={item.id}>
-                            {item.product?.name}x{item.quantity + ", "}
-                          </span>
-                        ))
-                      : "--"}
-                  </td>
-                  <td className="border border-base-300 px-4 py-2">
-                    {order.status ? <IoCheckmark className="text-green-500" /> : <IoRemove className="text-red-500" />}
+                  <td className="border border-base-300 px-4 py-2">{cus.dob}</td>
+                  <td className="border border-base-300 px-4 py-2">{cus.point}</td>
+                  <td className="border border-base-300 px-4 py-2">{cus.phoneNumber}</td>
+                  <td>
+                    {
+                      //Covert iso date to local date
+                      cus.createAt && new Date(cus.createAt.split("T")[0]).toLocaleDateString("vi-VN" /*, options*/)
+                    }
                   </td>
                   <td className="border border-base-300 px-4 py-2">
                     <button
                       className="btn btn-error hover:bg-error text-error hover:text-white btn-circle btn-ghost text-xl"
-                      onClick={() => removeOrder.mutate(order)}
+                      onClick={() => removeOrder.mutate(cus)}
                     >
                       <TbTrashXFilled />
                     </button>
@@ -126,10 +125,10 @@ function TicketsPage({}: Props) {
           </tbody>
           <tfoot>
             <tr>
-              <td colSpan={6}>
+              <td colSpan={9}>
                 <div className="flex justify-end gap-5">
                   <h3>Tổng số: </h3>
-                  <p>{orders && orders.length}</p>
+                  <p>{customers && customers.length}</p>
                 </div>
               </td>
             </tr>
@@ -140,4 +139,4 @@ function TicketsPage({}: Props) {
   );
 }
 
-export default TicketsPage;
+export default CustomerPage;
