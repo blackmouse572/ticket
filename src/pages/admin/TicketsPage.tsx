@@ -69,6 +69,7 @@ function TicketsPage({}: Props) {
             <tr>
               <th></th>
               <th className="px-4 py-2">Ticket Amount</th>
+              <th className="px-4 py-2">Customer email</th>
               <th className="px-4 py-2">Seats</th>
               <th className="px-4 py-2">Products</th>
               <th className="px-4 py-2">Status</th>
@@ -80,7 +81,7 @@ function TicketsPage({}: Props) {
             {isLoading && (
               <tr className="animate-pulse">
                 {/* Span all columns */}
-                <td className="border border-base-300 px-4 py-12 font-bold text-center text-lg" colSpan={6}>
+                <td className="border border-base-300 px-4 py-12 font-bold text-center text-lg" colSpan={9}>
                   Loading...
                 </td>
               </tr>
@@ -89,9 +90,15 @@ function TicketsPage({}: Props) {
               orders.map((order, index) => (
                 <tr key={order.id}>
                   <td className="border border-base-300 px-4 py-2">
-                    <span className="font-bold">{index + 1}</span>
+                    <span
+                      className="font-bold 
+                      whitespace-nowrap max-w-sm overflow-hidden overflow-ellipsis"
+                    >
+                      {order.id}
+                    </span>
                   </td>
                   <td className="border border-base-300 px-4 py-2">{order.tickets?.length}</td>
+                  <td className="border border-base-300 px-4 py-2">{order.customer?.email}</td>
                   <td className="border border-base-300 px-4 py-2">
                     {order.tickets?.map((ticket, index) => (
                       <span key={ticket.id}>
@@ -113,6 +120,7 @@ function TicketsPage({}: Props) {
                   <td className="border border-base-300 px-4 py-2">
                     {order.status ? <IoCheckmark className="text-green-500" /> : <IoRemove className="text-red-500" />}
                   </td>
+                  <td className="border border-base-300 px-4 py-2">{order.total?.toLocaleString("vn-VI") + " VND"}</td>
                   <td className="border border-base-300 px-4 py-2">
                     <button
                       className="btn btn-error hover:bg-error text-error hover:text-white btn-circle btn-ghost text-xl"
@@ -126,7 +134,7 @@ function TicketsPage({}: Props) {
           </tbody>
           <tfoot>
             <tr>
-              <td colSpan={6}>
+              <td colSpan={9}>
                 <div className="flex justify-end gap-5">
                   <h3>Tổng số: </h3>
                   <p>{orders && orders.length}</p>

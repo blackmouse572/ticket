@@ -34,7 +34,6 @@ function Home() {
       <section className="w-full h-fit">
         <Movies />
       </section>
-      <section className="w-full h-fit">sads</section>
     </>
   );
 }
