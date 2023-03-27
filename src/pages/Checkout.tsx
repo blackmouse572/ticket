@@ -155,7 +155,7 @@ function Checkout() {
                   <img className="w-full object-cover aspect-square" src={product.image} alt={product.name} />
                   <h3 className="font-bold flex justify-between">
                     <span>{product.name}</span>
-                    <span>{product.price.toLocaleString("vi-VN")}</span>
+                    <span>{product.price}</span>
                   </h3>
 
                   <div className="divider-horizontal vertical divider bg-base-content/40 w-[0.05rem] rounded-full" />
@@ -166,7 +166,7 @@ function Checkout() {
                     >
                       <FiPlus />
                     </button>
-                    <h6>{selectedProducts && selectedProducts[product.name] ? selectedProducts[product.name] : 0}</h6>
+                    <h6>{selectedProducts && selectedProducts[product.id || product.name]}</h6>
                     <button
                       className="bg-base-content p-2 rounded-full text-base-300 active:scale-95 transition-all duration-200 active:bg-base-content/80"
                       onClick={() => removeCombo(product)}

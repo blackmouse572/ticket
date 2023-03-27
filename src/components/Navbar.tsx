@@ -28,7 +28,7 @@ function Navbar() {
 const items = [
   {
     label: "Lịch chiếu",
-    href: "/lich-chieu",
+    href: "/phim-dang-chieu",
   },
   {
     label: "Đặt vé",
