@@ -38,6 +38,10 @@ const items = [
     label: "Đăng nhập",
     href: "/dang-nhap",
   },
+  {
+    label: "Đăng ký",
+    href: "/dang-ky",
+  },
 ];
 function NavbarDropdown() {
   const auth = useAuth();
@@ -74,6 +78,7 @@ function NavbarDropdown() {
                   </button>
                 </DropdownMenu.Item>
               );
+            if (auth?.user && index === 3) return null;
             return (
               <DropdownMenu.Item
                 className="px-3 py-2 hover:bg-base-300 cursor-pointer rounded-md transition-all"
