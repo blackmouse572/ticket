@@ -9,6 +9,7 @@ import { PlaceOrder } from "../entity/PlaceOrder";
 import { Product } from "../entity/Product";
 import { Seat } from "../entity/Seat";
 import { ShowTime } from "../entity/ShowTime";
+import { useToast } from "../hooks/useToast";
 import appfetch from "../lib/axios";
 export type CheckoutFormProps = {
   movie: Movie;
@@ -83,7 +84,7 @@ function Checkout() {
     total += seats.length * 80000;
     return total;
   }, [selectedProducts]);
-
+  const { addToast } = useToast();
   async function placeOrder() {
     //If no seats selected nor showtime selected, return
     if (!seats.length || !showTime) return;
@@ -123,12 +124,25 @@ function Checkout() {
         {}
       );
       if (res.status === 200) {
-        alert("Đặt vé thành công");
+        //Copy order id to clipboard
+        navigator.clipboard.writeText(res.data.order.Id);
+        addToast({
+          title: "Đặt vé thành công",
+          message: `Mã đơn hàng của bạn là ${res.data.order.Id}, đã được copy vào clipboard`,
+          type: "success",
+          id: "place-order-success",
+        });
         console.log(res);
       } else {
         alert("Đặt vé thất bại");
       }
     } catch (e) {
+      addToast({
+        title: "Đặt vé thất bại",
+        message: "Đã có lỗi xảy ra, vui lòng thử lại sau",
+        type: "error",
+        id: "place-order-error",
+      });
       console.log(e);
     }
   }
@@ -151,9 +165,17 @@ function Checkout() {
                   "bg-base-300 px-3 py-2 rounded-md flex items-center justify-between cursor-pointer col-span-3 lg:col-span-1"
                 }
               >
-                <div>
-                  <img className="w-full object-cover aspect-square" src={product.image} alt={product.name} />
-                  <h3 className="font-bold flex justify-between">
+                <div className="w-full">
+                  <img
+                    className="w-full object-cover aspect-square max-w-full"
+                    src={product.image}
+                    alt={product.name}
+                  />
+                  <h3
+                    className="font-bold flex justify-between
+                    w-full whitespace-pre-wrap my-2
+                  "
+                  >
                     <span>{product.name}</span>
                     <span>{product.price}</span>
                   </h3>
@@ -240,7 +262,7 @@ function Checkout() {
               selectedProducts &&
                 Object.keys(selectedProducts).map((productId) => (
                   <div className="flex justify-between" key={productId}>
-                    <p>
+                    <p className="text-start">
                       {
                         //get name of product
                         products.find((product) => product.id === productId)?.name

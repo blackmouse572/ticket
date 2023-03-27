@@ -1,5 +1,5 @@
 import React from "react";
-import { Navigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 
 type Props = {};
@@ -8,6 +8,7 @@ const Register = (props: Props) => {
   const [loginIsLoading, setLoginIsLoading] = React.useState(false);
   const auth = useAuth();
   const [error, setError] = React.useState("");
+  const navigate = useNavigate();
   async function onSubmit(e: any) {
     e.preventDefault();
     const email = e.target.email.value;
@@ -17,10 +18,14 @@ const Register = (props: Props) => {
     const password = e.target.password.value;
     try {
       setLoginIsLoading(true);
-      auth?.signup({ email, fullname, dob, phoneNumber, password });
+      await auth?.signup({ email, fullname, dob, phoneNumber, password });
+      setLoginIsLoading(false);
+      navigate("/");
     } catch (error) {
       console.log(error);
       setError("Email hoặc mật khẩu không đúng");
+    } finally {
+      setLoginIsLoading(false);
     }
   }
   if (auth?.user) return <Navigate to={"/"} />;

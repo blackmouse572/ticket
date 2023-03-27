@@ -90,10 +90,8 @@ function useProvideAuth() {
       if (data.error) {
         throw new Error(data.error);
       }
-      const { token, user } = data;
-      user.token = token;
-      setUser(user);
-      saveUser(user);
+      //after register, login
+      await signin({ email, password });
       return data;
     } catch (error) {
       console.log(error);

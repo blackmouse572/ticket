@@ -69,13 +69,13 @@ function typeToColor(type: Toast["type"]) {
 function typeToClass(type: Toast["type"]) {
   switch (type) {
     case "success":
-      return "bg-green-500/30 text-green-500 border border-green-500/80";
+      return "bg-green-500/40 backdrop-blur-md text-green-500 border border-green-500/80";
     case "error":
-      return "bg-red-500/30 text-red-500 border border red-500/80";
+      return "bg-red-500/40 backdrop-blur-md text-red-500 border border red-500/80";
     case "warning":
-      return "bg-yellow-500/30 text-yellow-500 border border yellow-500/80";
+      return "bg-yellow-500/40 backdrop-blur-md text-yellow-500 border border yellow-500/80";
     case "info":
-      return "bg-blue-500/30 text-blue-500 border border blue-500/80";
+      return "bg-blue-500/40 backdrop-blur-md text-blue-500 border border blue-500/80";
   }
 }
 
