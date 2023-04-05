@@ -5,9 +5,10 @@ import { useAuth } from "../hooks/useAuth";
 type Props = {};
 
 function Login({}: Props) {
-  const [loginIsLoading, setLoginIsLoading] = React.useState(false);
   const auth = useAuth();
+  const [loginIsLoading, setLoginIsLoading] = React.useState(false);
   const [error, setError] = React.useState("");
+
   async function onSubmit(e: any) {
     e.preventDefault();
     const email = e.target.email.value;
@@ -20,6 +21,7 @@ function Login({}: Props) {
       setError("Email hoặc mật khẩu không đúng");
     }
   }
+
   if (auth?.user) return <Navigate to={"/"} />;
   return (
     <div className="cotnainer mx-auto flex justify-center items-center h-screen">

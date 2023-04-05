@@ -25,6 +25,7 @@ type RegisterProps = {
   fullname: string;
   phoneNumber: string;
 };
+
 type User = {
   email: string;
   password: string;
@@ -33,6 +34,7 @@ type User = {
   phoneNumber: string;
   token: string;
 };
+
 function useProvideAuth() {
   const [user, setUser] = useState<User | null>(null);
   function saveUser(user: User) {
@@ -70,8 +72,8 @@ function useProvideAuth() {
     if (data.error) {
       throw new Error(data.error);
     }
-    saveUser(user);
-    setUser(user);
+    saveUser(user); //Local storage -- longer to live
+    setUser(user); //Save in state -- shorter to live + faster
     return data;
   };
   const signup = async ({ dob, email, fullname, password, phoneNumber }: RegisterProps) => {
@@ -101,6 +103,7 @@ function useProvideAuth() {
     clearUser();
     setUser(null);
   };
+
   useEffect(() => {
     //Load user from local storage
     const user = getUser();

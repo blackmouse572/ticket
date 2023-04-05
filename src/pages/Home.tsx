@@ -5,6 +5,7 @@ import { Carousel } from "react-responsive-carousel";
 import "react-responsive-carousel/lib/styles/carousel.min.css";
 import { Link } from "react-router-dom";
 import { Movie } from "../entity/Movie";
+import appfetch from "../lib/axios";
 
 function Home() {
   return (
@@ -52,13 +53,15 @@ const MovieTabs = [
 function Movies() {
   const [tab, setTab] = useState(MovieTabs[0].id);
   const sliderRef = useRef<HTMLDivElement>(null);
-  const { isLoading, isError, error, data } = useQuery<Movie[]>(["movies", tab], async () => {
-    const fetchUrl = tab === "phim-dang-chieu" ? "now_playing" : "upcoming";
 
-    const res = await fetch(`https://localhost:7193/api/Movies`);
-    const data = await res.json();
-    return data;
-  });
+  const { isLoading, isError, error, data } = useQuery<Movie[]>(
+    ["movies", tab], // this is key, determine when to refetch
+    async () => {
+      const res = await appfetch(`/Movies`);
+      const data = await res.data;
+      return data;
+    }
+  );
 
   function handleNext() {
     //Scroll to next

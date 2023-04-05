@@ -19,7 +19,7 @@ function OnGoingPage() {
   let [searchParams, setSearchParams] = useSearchParams();
   const movieId = searchParams.get("movieId");
 
-  const [movie, setMovie] = useState<Movie | null>(data.find((item) => item.id === movieId) as Movie);
+  const [movie, setMovie] = useState<Movie | null>(data.find((item) => item.id === movieId) as Movie); //Find movie which get from database by id
 
   const sliderRef = useRef<HTMLDivElement>(null);
 
@@ -105,10 +105,14 @@ const defaultSeats: Seat[] = Array.from({ length: 10 }, (_, i) =>
     seatNumber: j + 1,
   }))
 ).flat();
+
 function SeletedSeats({ movie }: { movie: Movie }) {
   const [chosenSeats, setChosenSeats] = useState<Seat[]>([]);
+
   const [time, setTime] = useState("");
+
   const [choosenShowTime, setChoosenShowTime] = useState<ShowTime | null>(null);
+
   const { data: showTimes, isLoading: showTimeLoading } = useQuery<ShowTime[]>(["showtimes", movie.id], async () => {
     const res = await fetch(`https://localhost:7193/api/ShowTimes/movie/${movie.id}?movieId=${movie.id}`);
     const data = await res.json();

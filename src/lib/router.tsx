@@ -1,12 +1,12 @@
 import { lazy } from "react";
 import { createBrowserRouter } from "react-router-dom";
 import { Product } from "../entity/Product";
-import AdminLayout from "../pages/admin/AdminLayout";
 import Home from "../pages/Home";
 import Login from "../pages/Login";
 import MainLayout from "../pages/MainLayout";
 import OnGoingPage from "../pages/OnGoingPage";
 import Register from "../pages/Register";
+import AdminLayout from "../pages/admin/AdminLayout";
 import appfetch from "./axios";
 const MoviesPage = lazy(() => import("../pages/admin/MoviesPage"));
 const TicketsPage = lazy(() => import("../pages/admin/TicketsPage"));
@@ -45,7 +45,7 @@ export const router = createBrowserRouter([
             const video = await res.json();
             data.video = video;
           }
-          return data;
+          return data; //return movie
         },
       },
       {

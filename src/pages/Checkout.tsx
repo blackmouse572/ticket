@@ -26,7 +26,15 @@ function Checkout() {
   }
   const { movie, seats, showTime, date } = checkoutProps;
   //Track selected combos and its amount
-  const [selectedProducts, setSelectedProducts] = useState<{ [productId: string]: number }>();
+  const [selectedProducts, setSelectedProducts] = useState<{ [productId: string]: number }>(); //Track selected combos and its amount
+  //Exm: {'combo1': 3, 'combo2': 1}
+  console.log(
+    `${selectedProducts}: [${products
+      .filter((p) => selectedProducts?.[p.id ?? p.name] !== undefined)
+      .map((p) => p.name)
+      .join(", ")}]`
+  );
+
   const { isLoading, data: token } = useQuery(["token"], async () => {
     const res = await appfetch.get("/Authen/token", {
       withCredentials: true,
@@ -128,7 +136,7 @@ function Checkout() {
         navigator.clipboard.writeText(res.data.order.Id);
         addToast({
           title: "Đặt vé thành công",
-          message: `Mã đơn hàng của bạn là ${res.data.order.Id}, đã được copy vào clipboard`,
+          message: `Mã đơn hàng của bạn là ${res.data.order.Id}, đã được copy vào clipboard. Sau 3 giây trang sẽ tự động chuyển hướng về trang chủ`,
           type: "success",
           id: "place-order-success",
         });
@@ -145,6 +153,11 @@ function Checkout() {
       });
       console.log(e);
     }
+
+    //navigate to home after 3 seconds
+    setTimeout(() => {
+      window.location.href = "/";
+    }, 3000);
   }
 
   return (
